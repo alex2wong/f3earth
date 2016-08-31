@@ -21,7 +21,7 @@ export class VectorSource extends Observable {
      *format features to coordinates which can be used by VectorSource constructor
     */
     forRender() {
-        const features = this._features;
+        const features = this._features ? this._features: [];
         let feature;
         let geom;
         let coords;
