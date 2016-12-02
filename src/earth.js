@@ -78,6 +78,18 @@ class Earth extends Observable {
         };
     }
 
+    /* @param x: clientX
+     * @param y: clientY
+     * return WGS84 lnglat [lng, lat].
+    */
+    getLngLatCoordinate(x, y) {
+        const openglCoordinate = {};
+        openglCoordinate.x = ((2.0 * x) / this._context.gl.viewportWidth) - 1;
+        openglCoordinate.y = (1 - (y / this._context.gl.viewportHeight)) * 2.0 - 1;
+        // .. glCoordinate2lnglat();
+        return [0, 0];
+    }
+
     addLayer(layer) {
         const sourceLayer = SourceLayer.from(this._context, layer);
         if (sourceLayer) {

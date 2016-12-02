@@ -41,6 +41,10 @@ export class GeoJSON extends Format {
                     case 'Point':
                         this._features.push(new Feature(new Point(gcoords), attr));
                         break;
+                    case 'MultiPoint':
+                        geomtype = Const.GeomType.POINT;
+                        this.createPoints(gcoords, attr);
+                        break;
                     case 'LineString':
                         this._features.push(new Feature(new LineString(gcoords), attr));
                         break;
@@ -62,6 +66,11 @@ export class GeoJSON extends Format {
         }
         this._geometryType = geomtype;
         return this;
+    }
+
+    createPoints(gcoords, attr) {
+        gcoords.forEach(gcoord => this._features.push(
+                            new Feature(new Point(gcoord), attr)));
     }
 
     createLines(gcoords, attr) {

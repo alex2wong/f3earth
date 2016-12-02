@@ -161,6 +161,11 @@ export class Camera {
         };
     }
 
+    getLngLatCoordinate(glx, gly) {
+        // transform glx,gly to Sphere XYZ, then get the Lng lat of this XYZ.
+        return [0, 0];
+    }
+
     setTarget(lng, lat) {
         this._eyePos.lng = lng;
         this._eyePos.lat = lat;

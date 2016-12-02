@@ -1,0 +1,331 @@
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html" charset="utf-8" />
+    <title>F3Earth - Animation Features</title>
+    <script type="text/javascript" src="../dist/fe.js" charset="
+    utf-8"></script>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="earth"></div>
+<div id='dashboard'>
+    <div id="app">
+        {{ message }}
+       <!--  <input type="text" name="username" v-bind:value="username"> -->
+    </div>
+    <input type="text" name="name" v-model="name">
+
+    <!-- app-2 is bound to another vue Object.. -->
+    <div id="app2">
+        <span v-bind:title="message"></span>
+    </div>
+    <hr>
+    <div id="controller">
+        <div class="control-btn" v-on:click="accelerate"> W </div>
+        <div class="control-btn" v-on:click="brake"> S </div>
+        <div class="control-btn" v-on:click="turnLeft"> A </div>
+        <div class="control-btn" v-on:click="turnRight"> D </div>
+        <div class="control-btn" v-on:click="fire"> Fire </div>
+    </div>
+    <span ><b> {{ name }}' Drone Status: </b> </span></br>
+    <span> LNGLAT: {{ point.coordinates[0].toFixed(3) }}
+                    {{point.coordinates[1].toFixed(3)}}</span></br>
+    <span >SPEED: {{ speed.toFixed(1) }}</span></br>
+    <span >ROTATION: {{ direction.toFixed(1) }}</span></br>
+    <span >LIFE: {{ life }}</span></br>
+    <span> FIRING: {{ firing }}</span></br>
+    
+</div>
+<hr>
+<div id="helpBtn" class="btn" > HELP</div>
+
+<div id="helpPanel">
+    <div v-if="visible">
+        This is Help Panel
+    </div>
+</div>
+<div id="statusBar">Ready....</div>
+</body>
+<script src="vue.js"></script>
+
+<script>
+    // flight.js
+    var firingTime = 1500, MAXSPEED = 3.900;
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'Input your name: ',
+            username: 'what name'
+        }
+    });
+
+    // object initilize.
+    var app2 = new Vue({
+        el: '#app2',
+        data: {
+            message: 'You loaded the page on ' + new Date()
+        }
+    });
+
+    var helpPanel = new Vue({
+        el: '#helpPanel',
+        data: {
+            visible: true
+        }
+    })
+
+    var drone = new Vue({
+        el: '#dashboard',
+        data: {
+            name: "",
+            point: {
+                'type': "Point",
+                'coordinates': [120.214, 31.03131],
+            },
+            speed: 0.1,
+            direction: 0.0,
+            life: 10,
+            height: 500,
+            bullets: [
+                {
+                    direction: 0.0,
+                    coordinates: [120.214, 31.03131]
+                },
+                {
+                    direction: 0.1,
+                    coordinates: [121.214, 31.23131]
+                },
+                {
+                    direction: 0.2,
+                    coordinates: [121.214, 31.63131]
+                }
+            ],
+            firing: false,
+            interval: null,
+            bulletUpdate: false
+        },
+        methods: {
+            turnLeft: function() {
+                if (this) {
+                    this.direction -= 0.1;
+                }
+            },
+            turnRight: function() {
+                this.direction += 0.1;
+            },
+            accelerate: function() {
+                if (this.speed < 1.900) {
+                    this.speed += 0.1;
+                }
+            },
+            brake: function() {
+                if (this.speed > 0.10001) {
+                    this.speed -= 0.10001;
+                }
+            },
+            fire: function() {
+                if (this.bullets instanceof Array && 
+                        this.bullets.length > 0 && !this.firing) {
+                    var that = this;
+                    setTimeout(function() {
+                        that.firing = false;
+                        // clearInterval(that.interval);
+                    }, firingTime)
+                    this.firing = true;
+                    // this.interval = setInterval(function() {
+                    //     for (var i = 0; i < that.bullets.length; i++) {
+                    //         that.bullets[i].coordinates[0] += 0.01;
+                    //         that.bullets[i].coordinates[1] += 0.01;
+                    //     }
+                    // } , 40);
+                }
+            }
+        }
+    })
+
+    function updateDrone() {
+        drone.point.coordinates[0] += Math.sin(drone.direction) * drone.speed * 0.01;
+        drone.point.coordinates[1] += Math.cos(drone.direction) * drone.speed * 0.01;
+        updateDroneView()
+    }
+
+    function turnLeft(){
+        if (drone) {
+            drone.direction -= 0.1;
+        }
+    }
+
+    function turnRight(){
+        if (drone) {
+            drone.direction += 0.1;
+        }
+    }
+
+    function accelerate(){
+        if (drone && drone.speed < MAXSPEED) {
+            drone.speed += 0.1;
+        }
+    }
+
+    function brake(){
+        if (drone && drone.speed > 0.100) {
+            drone.speed -= 0.1;
+        }
+    }
+
+    function fire(){
+        console.warn("firing!");
+        if (drone && !drone.firing) {
+            setTimeout(function() {
+                drone.firing = false;
+            }, firingTime);
+            drone.firing = true;
+        }
+    }
+
+    function randomName() {
+        return "Player" + (Math.random()*10000).toFixed(0);
+    }
+
+    var socket, statusBar = document.querySelector("#statusBar")
+    // config socket connection.
+
+    /*
+      Directly Manipulate DOM in JS is not Recommended, 
+      use "v-on: evet='handler'" instead  !!
+    */
+
+    // add control interaction or event listener.
+    document.body.addEventListener('keydown', function(e) {
+        if (e.which === 37||e.which === 65) {
+            turnLeft();
+        }
+        if (e.which === 39||e.which === 68) {
+            turnRight();
+        }
+        if (e.which === 38 ||e.which === 87) { // faster
+            accelerate(e);
+        }
+        if (e.which === 40||e.which === 83) { // slower
+            brake(e);
+        }
+        if (e.which === 32) {
+            fire(e);
+        }
+        if (e.which === 66) {
+            // drone.bomb(e);
+        }
+        // console.log(e.which);
+    })
+
+    var helpBtn = document.querySelector("#helpBtn");
+    helpBtn.addEventListener("click", function(evt){
+        helpPanel.visible = !helpPanel.visible;
+    })
+
+    bulletInterval = setInterval(function() {
+        // fps25 bullet calculation.
+        if (drone && drone.firing) {
+            drone.bulletUpdate = !drone.bulletUpdate;
+            for (var i = 0; i < drone.bullets.length; i++) {
+                drone.bullets[i].coordinates[0] += 0.01;
+                drone.bullets[i].coordinates[1] += 0.01;
+            }
+        }
+        updateDrone();
+    }, 40);
+        
+</script>
+
+<script type="text/javascript">
+
+    var earth = new FE.Earth("earth");
+    var droneFeature = new FE.Feature(new FE.Geometry.Point(drone.point.coordinates));
+    earth.addLayer({
+        type: 'rasterTile',
+        url: 'http://mt3.google.cn/vt/lyrs=s@138&hl=zh-CN&gl=CN&src=app&x={x}&y={y}&z={z}&s=Galil'
+        // url: 'http://a.tile.openstreetmap.org/{z}/{x}/{y}.png'
+    });
+
+    // Vue Object denote the drone obj
+    // GeoJSON format geometry..
+    function updateDroneView() {
+        droneFeature = new FE.Feature(new FE.Geometry.Point(drone.point.coordinates));
+    }
+
+    var animation = function() {
+        // point._coords[0] += Math.random() * 0.1 - 0.05;
+        // point._coords[1] += Math.random() * 0.1 - 0.05;
+        // vsource._features = [];
+        // vsource._features.push(droneFeature);
+        // vsource._coordinates = [];
+        // // _features to _coordinates...
+        // vsource.forRender();
+        // vsource.trigger('sourceChange');
+        
+        features = [];
+        features.push(droneFeature);
+
+        if (earth._sourceLayers.length > 1) {
+            earth._sourceLayers.splice(1,1);
+        }        
+        earth.addLayer({
+            id: 'point',
+            source: {
+                id: 1,
+                features: features
+            },
+            layout: {
+                altitude: {
+                    type: 'relative',
+                    height: 100
+                },
+                width: 2
+            },
+            paint: {
+                color: '#FF0000'
+            },
+            type: 'point'
+        });
+    }
+
+    setInterval(animation, 40);
+
+    function loadJSON2(data) {
+        var gformat = new FE.Format.GeoJSON();
+        var lconfig = gformat.readFeatures(data).createLayerConfig();
+        earth.addLayer(lconfig);
+    }
+
+    // show china
+    earth.setCenter(123, 30);
+
+    var doubleClickZoomInteraction=new FE.Interaction.DoubleClickZoom();
+    earth.addInteraction(doubleClickZoomInteraction);
+
+    var dragInteraction=new FE.Interaction.Drag();
+    earth.addInteraction(dragInteraction);
+
+    var mouseWheelZoomInteraction=new FE.Interaction.MouseWheelZoom();
+    earth.addInteraction(mouseWheelZoomInteraction);
+
+    var files = document.getElementsByName('fileupload')[0];
+    function fileselect(){
+        var f = files.files[0];
+        var reader = new FileReader();
+        var fnames = f.name.split('.');
+        var ftype = fnames[fnames.length - 1];
+        if (ftype === 'json' || ftype === 'geojson') {
+            reader.readAsText(f);
+            reader.onload = function() {
+                loadJSON2(reader.result);
+            }
+        } else console.log('pls input json file');
+    }
+</script>
+
+</body>
+</html>

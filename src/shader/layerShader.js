@@ -38,13 +38,31 @@ export class LayerShader {
 
     static get fillFragmentSource() {
         return `
-          precision mediump float;
+          attribute vec2 aVertexPosition;
+        
+          uniform mat4 uMVMatrix;
+          uniform mat4 uPMatrix;
+          uniform float uPointSize;
+          uniform float uEarthRadius;
 
-          uniform vec4 uColor;
+          vec3 convertPosition(vec2 lonLat, float earthRadius) {
+            float PI = 3.1415926;
+            float lonRadians = lonLat[0] / 180.0 * PI;
+            float latRadians = lonLat[1] / 180.0 * PI;
 
+            float radCosLat = earthRadius * cos(latRadians);
+
+            float pointX = radCosLat * cos(lonRadians);
+            float pointY = radCosLat * sin(lonRadians);
+            float pointZ = earthRadius * sin(latRadians);
+            return vec3(pointX, pointY, pointZ);
+          }
+        
           void main() {
-            gl_FragColor = uColor;
-          } 
+            gl_PointSize = uPointSize;
+            vec3 pos = convertPosition(aVertexPosition, uEarthRadius);
+            gl_Position = uPMatrix * uMVMatrix * vec4(pos, 1.0);
+          }
         `;
     }
     static get pointVertexSource() {

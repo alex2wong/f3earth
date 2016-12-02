@@ -29,7 +29,9 @@ Const.ControlEventType = {
 Const.GeomType = {
     POINT: 'Point',
     LINE: 'LineString',
-    POLYGON: 'Polygon'
+    POLYGON: 'Polygon',
+    CIRCLE: 'Circle',
+    CIRCLEFILL: 'CircleFill'
 };
 
 Const.LayerType = {

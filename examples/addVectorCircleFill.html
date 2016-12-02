@@ -24,6 +24,25 @@
             url: 'http://a.tile.openstreetmap.org/{z}/{x}/{y}.png'
         });
 
+        /* add Geometry.CircleFill class */
+        var lineLayerConfig = {
+            source: {
+                id: 1,
+                features: [new FE.Feature(new FE.Geometry.CircleFill([113, 23], 500000))]
+            },
+            layout: {
+                altitude: {
+                    type: 'relative',
+                    height: 100
+                },
+                width: 2
+            },
+            paint: {
+                color: '#FF0000'
+            },
+            type: 'line'
+        };
+
         var circleLayerConfig = {
             source: {
                 id: 1,
